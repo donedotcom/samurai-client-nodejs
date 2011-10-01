@@ -126,6 +126,7 @@ test['Setting individual configuration options'] = function(exit) {
   config.option('debug', false);
   config.option('debug', 'yes'); // truthy
   config.option('debug').should.equal(true);
+  config.option('debug', false);
 
   config.option('currency', 'USD');
   config.option('currency', 'JPY');

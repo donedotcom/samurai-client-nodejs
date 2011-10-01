@@ -26,7 +26,7 @@
     },
     "devDependencies": {
         "should": ">= 0.2.0",
-        "expresso": ">= 0.8.0",
+        "expresso": "git://github.com/FeeFighters/expresso.git#93ae3707e8f4d6eebc9d27ec6b4e9984122f1a79",
         "uglify-js": ">= 1.0.1"
     },
     "engine": [ "node >=0.4.0" ],

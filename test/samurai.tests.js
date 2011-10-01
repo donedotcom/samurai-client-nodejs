@@ -16,8 +16,9 @@ var testExpiredDate = getAdjustedDateparts(-12); // One year ago
 var testSettings = require('./config');
 
 // Enable sandbox, and debug
-samurai.option('sandbox', true);
-samurai.option('debug', true);
+// samurai.option('sandbox', true);
+// samurai.option('debug', true);
+samurai.option('debug', false);
 samurai.option('currency', 'USD');
 samurai.option('allowedCurrencies', ['USD']);
 
