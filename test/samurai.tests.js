@@ -18,6 +18,7 @@ var testSettings = require('./config');
 // Enable sandbox, and debug
 // samurai.option('sandbox', true);
 // samurai.option('debug', true);
+samurai.option('sandbox', false);
 samurai.option('debug', false);
 samurai.option('currency', 'USD');
 samurai.option('allowedCurrencies', ['USD']);
@@ -44,7 +45,7 @@ var sandboxValidCard = {
   // No other extra data, this is only for testing transactions
 };
 
-var sandboxInvalidCard = {
+var sandboxDeclinedCard = {
   number: '4242-4242-4242-4242',
   csc: '123',
   year: testNonExpiredDate[0].toString(),
@@ -505,11 +506,11 @@ test['Execute transaction with bad card'] = function(exit) {
     data: {
       billingReference: '123',
       customerReference: '123',
-      amount: 10
+      amount: 10  // Declined amount code
     }
   });
   
-  var card = new samurai.Card(sandboxInvalidCard);
+  var card = new samurai.Card(sandboxDeclinedCard);
 
   card.create(function(err) {
     // We have the token now.
