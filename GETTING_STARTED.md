@@ -100,8 +100,8 @@ Before you use any of the samurai-client-nodejs's functions, you should configur
 
     samurai.configure({
       merchantKey: 'xxxxxxxxxxxxxxxxxxxxxxxx',
-      apiPassword: 'xxxxxxxxxxxxxxxxxxxxxxxx',
-      processorId: 'xxxxxxxxxxxxxxxxxxxxxxxx'
+      merchantPassword: 'xxxxxxxxxxxxxxxxxxxxxxxx',
+      processorToken: 'xxxxxxxxxxxxxxxxxxxxxxxx'
     });
 
 Samurai gatway uses transparent redirect method to process credit card

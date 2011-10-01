@@ -25,8 +25,8 @@ testKeyBases.forEach(function(base) {
 test['Initial state'] = function(exit) {
   config.should.respondTo('option');
   config.option('merchantKey').should.equal('');
-  config.option('apiPassword').should.equal('');
-  config.option('processorId').should.equal('');
+  config.option('merchantPassword').should.equal('');
+  config.option('processorToken').should.equal('');
   config.option('currency').should.equal('USD');
   config.option('enabled').should.equal(true);
   config.option('debug').should.equal(false);
@@ -43,22 +43,22 @@ test['Configuration requires all three keys'] = function(exit) {
 
   assert.throws(function() {
     config.configure({
-      apiPassword: testKeys[1],
-      processorId: testKeys[2]
+      merchantPassword: testKeys[1],
+      processorToken: testKeys[2]
     });
   });
   
   assert.throws(function() {
     config.configure({
       merchantKey: testKeys[0],
-      processorId: testKeys[2]
+      processorToken: testKeys[2]
     });
   });
 
   assert.throws(function() {
     config.configure({
       merchantKey: testKeys[0],
-      apiPassword: testKeys[1]
+      merchantPassword: testKeys[1]
     });
   });
 };
@@ -67,24 +67,24 @@ test['Configuration fails with invalid-looking keys'] = function(exit) {
   assert.throws(function() {
     config.configure({
       merchantKey: testKeys[0],
-      apiPassword: testKeys[1],
-      processorId: badKeys[0]
+      merchantPassword: testKeys[1],
+      processorToken: badKeys[0]
     });
   });
 
   assert.throws(function() {
     config.configure({
       merchantKey: testKeys[0],
-      apiPassword: badKeys[0],
-      processorId: testKeys[1]
+      merchantPassword: badKeys[0],
+      processorToken: testKeys[1]
     });
   });
   
   assert.throws(function() {
     config.configure({
       merchantKey: badKeys[0],
-      apiPassword: testKeys[0],
-      processorId: testKeys[1]
+      merchantPassword: testKeys[0],
+      processorToken: testKeys[1]
     });
   });
 };
@@ -92,24 +92,24 @@ test['Configuration fails with invalid-looking keys'] = function(exit) {
 test['Proper configuration modifies settings correctly'] = function(exit) {
   config.configure({
     merchantKey: testKeys[0],
-    apiPassword: testKeys[1],
-    processorId: testKeys[2],
+    merchantPassword: testKeys[1],
+    processorToken: testKeys[2],
     allowMultipleSetOption: true // to prevent locking up settings
   });
   config.option('merchantKey').should.equal(testKeys[0]);
-  config.option('apiPassword').should.equal(testKeys[1]);
-  config.option('processorId').should.equal(testKeys[2]);
+  config.option('merchantPassword').should.equal(testKeys[1]);
+  config.option('processorToken').should.equal(testKeys[2]);
 };
 
 test['Setting individual configuration options'] = function(exit) {
   config.option('merchantKey', testKeys[0]);
   config.option('merchantKey').should.equal(testKeys[0]);
 
-  config.option('apiPassword', testKeys[1]);
-  config.option('apiPassword').should.equal(testKeys[1]);
+  config.option('merchantPassword', testKeys[1]);
+  config.option('merchantPassword').should.equal(testKeys[1]);
 
-  config.option('processorId', testKeys[2]);
-  config.option('processorId').should.equal(testKeys[2]);
+  config.option('processorToken', testKeys[2]);
+  config.option('processorToken').should.equal(testKeys[2]);
 
   config.option('enabled', false);
   config.option('enabled', true);
@@ -148,10 +148,10 @@ test['Setting individual configuration options'] = function(exit) {
   }, 'Not valid merchantKey');
 
   assert.throws(function() {
-    config.option('apiPassword', badKeys[0]);
-  }, 'Not valid apiPassword');
+    config.option('merchantPassword', badKeys[0]);
+  }, 'Not valid merchantPassword');
 
   assert.throws(function() {
-    config.option('processorId', badKeys[0]);
-  }, 'Not valid processorId');
+    config.option('processorToken', badKeys[0]);
+  }, 'Not valid processorToken');
 };

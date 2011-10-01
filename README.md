@@ -48,8 +48,8 @@ cloned repository:
     // Configure samurai-client-nodejs
     samurai.configure({
       merchantKey: 'xxxxxxxxxxxxxxxxxxxxxxxx',
-      processorId: 'xxxxxxxxxxxxxxxxxxxxxxxx',
-      apiPassword: 'xxxxxxxxxxxxxxxxxxxxxxxx',
+      processorToken: 'xxxxxxxxxxxxxxxxxxxxxxxx',
+      merchantPassword: 'xxxxxxxxxxxxxxxxxxxxxxxx',
       currency: 'USD', // default
       debug: false, // default, should stay off in production at all costs
       enabled: true, // default
@@ -163,8 +163,8 @@ and [should.js](https://github.com/visionmedia/should.js). You also need to
 create a file called `test/config.js`, and add your keys there:
 
     exports.merchantKey = 'xxxxxxxxxxxxxxxxxxxxxxxx';
-    exports.apiPassword = 'xxxxxxxxxxxxxxxxxxxxxxxx';
-    exports.processorId = 'xxxxxxxxxxxxxxxxxxxxxxxx';
+    exports.merchantPassword = 'xxxxxxxxxxxxxxxxxxxxxxxx';
+    exports.processorToken = 'xxxxxxxxxxxxxxxxxxxxxxxx';
 
 The tests are run simply by simply typing `make` in the project directory.
 Alternatively, you can type:
