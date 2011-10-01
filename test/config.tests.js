@@ -1,6 +1,6 @@
 /**
  * Samurai - unit tests for configuration module
- * Copyright (c)2011, by Branko Vukelic <branko@herdhound.com>
+ * Copyright (c)2011, by FeeFighters <samurai@feefighters.com>
  * Licensed under MIT license (see LICENSE)
  */
 

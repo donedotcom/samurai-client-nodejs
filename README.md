@@ -2,7 +2,7 @@
 
 ## Overview
 
-samurai-client-nodejs (pronounced as _dah-e-myoh_) is a client library for the 
+samurai-client-nodejs is a client library for the 
 [Samurai payment gateway](https://samurai.feefighters.com) from
 [FeeFighters](http://feefighters.com/). By the time 1.0 release is made,
 samurai-client-nodejs will support all of Samurai's API, but the current immediate goal is to
@@ -169,7 +169,7 @@ create a file called `test/config.js`, and add your keys there:
 The tests are run simply by simply typing `make` in the project directory.
 Alternatively, you can type:
 
-    expresso /test/*.tests.js
+    node_modules/.bin/expresso test/*.tests.js
 
 Do not run tests with your live processor. Make sure you are running in a
 sandbox.
@@ -179,8 +179,8 @@ sandbox.
 You may use the [issue tracker](https://github.com/FeeFighters/samurai-client-nodejs/issues) to
 report samurai-client-nodejs bugs you find.
 
-Originally created at [Herd Hound](http://www.herdhound.com/)
-Copyright (c)2011, by Branko Vukelic <branko@herdhound.com>.
+Originally created at [Herd Hound](http://www.herdhound.com/) by Branko Vukelic <branko@herdhound.com>.
+Copyright (c)2011, by FeeFighters <samurai@feefighters.com>.
 
 Licensed under MIT license (see
 [LICENSE](https://github.com/FeeFighters/samurai-client-nodejs/blob/master/LICENSE))

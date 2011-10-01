@@ -1,6 +1,6 @@
 /**
  * Samurai - unit tests for the main Samurai module
- * Copyright (c)2011, by Branko Vukelic.
+ * Copyright (c)2011, by FeeFighters.
  * Licensed under MIT license (see LICENSE)
  */
 
