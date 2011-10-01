@@ -6,7 +6,7 @@
  * jQuery plugin for making requests to Samurai payment gateway via a hidden 
  * iframe.
  *
- * Ashigaru is part of Daimyo (https//github.com/HerdHound/Daimyo).
+ * Ashigaru is part of Samurai (https//github.com/HerdHound/Samurai).
  *
  * ## About the JSON parser
  *
@@ -23,7 +23,7 @@
  * plugin, it will redirect the user to the redirect URL. The redirect URL will
  * have an URL parameter called `payment_method_token` which should be a 
  * 24-digit hexdigest. That token identifies the payment method created by the
- * user. (See the documentation for the `daimyo` module for more information
+ * user. (See the documentation for the `samurai` module for more information
  * on how to use this token.)
  *
  * Once you have performed any operations you want, you can respond to the 

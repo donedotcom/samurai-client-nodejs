@@ -1,5 +1,5 @@
 /**
- * Daimyo - unit tests for the main Daimyo module
+ * Samurai - unit tests for the main Samurai module
  * Copyright (c)2011, by Branko Vukelic.
  * Licensed under MIT license (see LICENSE)
  */
@@ -7,7 +7,7 @@
 var assert = require('assert');
 var should = require('should');
 var getAdjustedDateparts = require('./helpers').getAdjustedDateparts;
-var daimyo = require('../index.js');
+var samurai = require('../index.js');
 var messages = require('../lib/messages');
 var test = exports;
 
@@ -16,10 +16,10 @@ var testExpiredDate = getAdjustedDateparts(-12); // One year ago
 var testSettings = require('./config');
 
 // Enable sandbox, and debug
-daimyo.option('sandbox', true);
-daimyo.option('debug', true);
-daimyo.option('currency', 'USD');
-daimyo.option('allowedCurrencies', ['USD']);
+samurai.option('sandbox', true);
+samurai.option('debug', true);
+samurai.option('currency', 'USD');
+samurai.option('allowedCurrencies', ['USD']);
 
 var testCard = {
   number: '5555555555554444', // MasterCard
@@ -60,26 +60,26 @@ var bogusCard = {
 
 test['Configure and lock configuration'] = function(exit) {
   testSettings.allowMultipleSetOption = false;
-  daimyo.configure(testSettings);
+  samurai.configure(testSettings);
   assert.throws(function() {
-    daimyo.configure(testSettings);
+    samurai.configure(testSettings);
   });
   assert.throws(function() {
-    daimyo.option('debug', false);
+    samurai.option('debug', false);
   });
 };
 
-test['daimyo module has Card constructor'] = function(exit) {
+test['samurai module has Card constructor'] = function(exit) {
   var Card;
   var card;
 
-  daimyo.should.have.property('Card');
-  daimyo.Card.should.be.a('function');
-  Card = daimyo.Card;
+  samurai.should.have.property('Card');
+  samurai.Card.should.be.a('function');
+  Card = samurai.Card;
 };
 
 test['Creating a new card'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
 
   card = new Card(testCard);
 
@@ -118,7 +118,7 @@ test['Creating a new card'] = function(exit) {
 };
 
 test['Creating a bogus card'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
 
   card = new Card(bogusCard);
 
@@ -134,7 +134,7 @@ test['Creating a bogus card'] = function(exit) {
 
 // GH: #1
 test['Card number should be stripped of non-digit elements'] = function(exit) {
-  card = new daimyo.Card({
+  card = new samurai.Card({
     number: '4111-1111-1111-1111',
     csc: '123'
   });
@@ -142,7 +142,7 @@ test['Card number should be stripped of non-digit elements'] = function(exit) {
 };
 
 test['Creating card without card number or CSC throws'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
 
   assert.throws(function() {
     card = new Card({});
@@ -163,7 +163,7 @@ test['Creating card without card number or CSC throws'] = function(exit) {
 };
 
 test['2-digit or 1-digit year converts to 4-digits'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
 
   var card = new Card({
     number: testCard.number,
@@ -182,7 +182,7 @@ test['2-digit or 1-digit year converts to 4-digits'] = function(exit) {
 };
 
 test['Year is normalized with setting year property'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
   
   var card = new Card(testCard);
   card.year = '3';
@@ -190,7 +190,7 @@ test['Year is normalized with setting year property'] = function(exit) {
 };
 
 test['Cannot set invalid month'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
 
   var card = new Card({
     number: testCard.number,
@@ -207,7 +207,7 @@ test['Cannot set invalid month'] = function(exit) {
 };
 
 test['Card validation'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
 
   var card = new Card(testCard);
 
@@ -219,7 +219,7 @@ test['Card validation'] = function(exit) {
 };
 
 test['Card expiration check'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
 
   card = new Card(testCard);
   card.should.respondTo('isExpired');
@@ -230,7 +230,7 @@ test['Card expiration check'] = function(exit) {
 };
 
 test['Create method sets a token'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
   var card = new Card(testCard);
   
   card.should.respondTo('create');
@@ -242,7 +242,7 @@ test['Create method sets a token'] = function(exit) {
 };
 
 test['Created card can load payment method data'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
   var card = new Card(testCard);
   var card1;
   var token;
@@ -279,7 +279,7 @@ test['Created card can load payment method data'] = function(exit) {
 };
 
 test['Create a bad payment method'] = function(exit) {
-  var card = new daimyo.Card(bogusCard);
+  var card = new samurai.Card(bogusCard);
 
   function onLoad(err) {
     card.should.have.property('messages');
@@ -297,7 +297,7 @@ test['Create a bad payment method'] = function(exit) {
 
 test['Card has _dirty property which lists changed fields'] = function(exit) {
   // Initially, all fields are dirty
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
   var card = new Card(testCard);
   var token;
 
@@ -329,7 +329,7 @@ test['Card has _dirty property which lists changed fields'] = function(exit) {
 };
 
 test['Updating a modified card'] = function(exit) {
-  var Card = daimyo.Card;
+  var Card = samurai.Card;
   var card;
 
   function onUpdate() {
@@ -363,7 +363,7 @@ test['Updating a modified card'] = function(exit) {
 };
 
 test['Retain card'] = function(exit) {
-  var card = new daimyo.Card(testCard);
+  var card = new samurai.Card(testCard);
 
   card.create(function(err) {
     card.retain(function(err) {
@@ -385,7 +385,7 @@ test['Retain card'] = function(exit) {
 };
 
 test['Redact card'] = function(exit) {
-  var card = new daimyo.Card(testCard);
+  var card = new samurai.Card(testCard);
 
   card.create(function(err) {
     card.retain(function(err) {
@@ -404,7 +404,7 @@ test['Creating new transaction object throws if no type'] = function(exit) {
   var transaction;
 
   assert.throws(function() {
-    transaction = new daimyo.Transaction({
+    transaction = new samurai.Transaction({
       type: null, 
       data: {amount: 10}
     });
@@ -415,7 +415,7 @@ test['Creating new transaction throws with missing data'] = function(exit) {
   var transaction;
 
   assert.throws(function() {
-    transaction = new daimyo.Transaction({
+    transaction = new samurai.Transaction({
       type: 'purchase',
       data: null
     });
@@ -423,7 +423,7 @@ test['Creating new transaction throws with missing data'] = function(exit) {
 };
 
 test['New transaction has a few extra properties'] = function(exit) {
-  var transaction = new daimyo.Transaction({
+  var transaction = new samurai.Transaction({
     type: 'purchase',
     data: {amount: 10}
   });
@@ -433,12 +433,12 @@ test['New transaction has a few extra properties'] = function(exit) {
   transaction.should.have.property('data');
   transaction.data.should.have.keys(['amount', 'type', 'currency']);
   transaction.data.type.should.equal('purchase');
-  transaction.data.currency.should.equal(daimyo.option('currency'));
+  transaction.data.currency.should.equal(samurai.option('currency'));
   transaction.should.have.property('path');
 };
 
 test['Simple transactions do not set type and currency'] = function(exit) {
-  var transaction = new daimyo.Transaction({
+  var transaction = new samurai.Transaction({
     type: 'void',
     transactionId: '111111111111111111111111',
     data: {}
@@ -464,7 +464,7 @@ test['Execute transaction'] = function(exit) {
     transaction.messages.info.should.have.property('transaction'); transaction.messages.info.transaction.should.contain('Success');
   }
   
-  transaction = new daimyo.Transaction({
+  transaction = new samurai.Transaction({
     type: 'purchase',
     data: {
       billingReference: '123',
@@ -475,7 +475,7 @@ test['Execute transaction'] = function(exit) {
   });
 
   // First we need a card
-  var card = new daimyo.Card(sandboxValidCard);
+  var card = new samurai.Card(sandboxValidCard);
 
   card.create(function(err) {
     // We have the token now.
@@ -499,7 +499,7 @@ test['Execute transaction with bad card'] = function(exit) {
     transaction.messages.errors.transaction.should.contain('Declined');
   }
 
-  transaction = new daimyo.Transaction({
+  transaction = new samurai.Transaction({
     type: 'purchase',
     data: {
       billingReference: '123',
@@ -508,7 +508,7 @@ test['Execute transaction with bad card'] = function(exit) {
     }
   });
   
-  var card = new daimyo.Card(sandboxInvalidCard);
+  var card = new samurai.Card(sandboxInvalidCard);
 
   card.create(function(err) {
     // We have the token now.
@@ -532,7 +532,7 @@ test['Using transactions with wrong currency'] = function(exit) {
     transaction.should.not.have.property('receipt');
   }
 
-  transaction = new daimyo.Transaction({
+  transaction = new samurai.Transaction({
     type: 'purchase',
     data: {
       amount: 10,
@@ -541,7 +541,7 @@ test['Using transactions with wrong currency'] = function(exit) {
   });
 
   // First we need a card
-  var card = new daimyo.Card(sandboxValidCard);
+  var card = new samurai.Card(sandboxValidCard);
 
   card.create(function(err) {
     // We have the token now.
@@ -563,7 +563,7 @@ test['Card with no token cannot be used for transaction'] = function(exit) {
     transaction.should.not.have.property('receipt');
   }
 
-  transaction = new daimyo.Transaction({
+  transaction = new samurai.Transaction({
     type: 'purchase',
     data: {
       amount: 10,
@@ -571,6 +571,6 @@ test['Card with no token cannot be used for transaction'] = function(exit) {
     }
   });
 
-  var card = new daimyo.Card(sandboxValidCard);
+  var card = new samurai.Card(sandboxValidCard);
   transaction.process(card, callback);
 };

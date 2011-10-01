@@ -1,5 +1,5 @@
 /**
- * Daimyo - unit tests for configuration module
+ * Samurai - unit tests for configuration module
  * Copyright (c)2011, by Branko Vukelic <branko@herdhound.com>
  * Licensed under MIT license (see LICENSE)
  */

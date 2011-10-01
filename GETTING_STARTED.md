@@ -1,6 +1,6 @@
 ## Getting started
 
-Fee Figters' [Samurai](http://feefighters.com/samurai) payment gateway is
+Fee Figters' [Samurai](https://samurai,feefighters.com) payment gateway is
 currently in beta. Before joining the beta program and getting an account, it
 is highly recommended that you get your merchant account first. After signing
 up with Samurai, you will receive three HEX tokens:
@@ -11,14 +11,14 @@ up with Samurai, you will receive three HEX tokens:
 
 Initially, you will receive a sandbox processor ID. The sandbox is used for
 testing, and you cannot actually process transactions using the sandbox. Keep
-in mind that you should only run unit tests that come with Daimyo using the
+in mind that you should only run unit tests that come with samurai-client-nodejs using the
 sandbox processor ID.
 
 ### Overview
 
 When using the Samurai payment gateway, you basically deal with two separate
 concepts: payment methods (cards) and transactions (making/loosing money).
-Daimyo's API reflects this dualism. It provides two main constructors that you
+samurai-client-nodejs's API reflects this dualism. It provides two main constructors that you
 will use most of the time: `Card` and `Transaction`.
 
 Once created the card objects have the following methods:
@@ -41,7 +41,7 @@ the payment method associated with the card.
 
 ### Notes on PCI compliance
 
-There are two ways you can use the Samurai gateway with Daimyo in terms of
+There are two ways you can use the Samurai gateway with samurai-client-nodejs in terms of
 payment methods management. One is server-to-server, where you handle the 
 cardholder data, and pass them on to the gateway. Another method is transparent
 redirect, where you set up a web form that submits directly to the gateway, and
@@ -57,15 +57,15 @@ infrastructure you might be using, and many other steps. You can read more
 about PCI compliance at
 [www.pcisecuritystandards.org](https://www.pcisecuritystandards.org/).
 
-Also note that Daimyo itself has _not_ been atested or tested for PCI
-compliance, so use of Daimyo in your environment may negatively affect your
-capacity to achieve PCI compliance. While Daimyo's author sincerely believes
-that Daimyo is reasonably safe (or, rather, will be when a full release is
+Also note that samurai-client-nodejs itself has _not_ been atested or tested for PCI
+compliance, so use of samurai-client-nodejs in your environment may negatively affect your
+capacity to achieve PCI compliance. While samurai-client-nodejs's author sincerely believes
+that samurai-client-nodejs is reasonably safe (or, rather, will be when a full release is
 made), we do not, and cannot make any guarantees to that effect, either
 explicit or implied, as noted in the
-[LICENSE](https://github.com/HerdHound/Daimyo/blob/master/LICENSE). Daimyo is
+[LICENSE](https://github.com/FeeFighters/samurai-client-nodejs/blob/master/LICENSE). samurai-client-nodejs is
 provided to you as is, with no implied and/or explicit warranties of any sort.
-In other words, you are on your own using Daimyo if you are looking for PCI
+In other words, you are on your own using samurai-client-nodejs if you are looking for PCI
 compliance. Good news is, source code is availabe, so you can make any
 necessary adjustments. (Don't forget to send us a pull request if you do so.)
 
@@ -73,11 +73,11 @@ necessary adjustments. (Don't forget to send us a pull request if you do so.)
 
 If you have an AJAX-intesive website that cannot make regular POST requests
 using web forms, you might want to try using the Ashigaru jQuery plugin. The
-plugin is included in the Daimyo project directory under `/support`
+plugin is included in the samurai-client-nodejs project directory under `/support`
 subdirectory. For more information on how to set up your server for use with
 Ashigaru, and basic usage of this plugin, take a look at Ashigaru's
 documentation. You can also find a 
-[functional demo](http://herdhound.github.com/Daimyo/example/ashigaru/) online.
+[functional demo](http://herdhound.github.com/samurai-client-nodejs/example/ashigaru/) online.
 
 Ashigaru has been tested only on the latest browsers. Browsers that are
 currently supported by Ashigaru are:
@@ -94,11 +94,11 @@ please file a bug report.
 
 ### Configuration
 
-Before you use any of the Daimyo's functions, you should configure Daimyo.
+Before you use any of the samurai-client-nodejs's functions, you should configure samurai-client-nodejs.
 
-    var daimyo = require('daimyo');
+    var samurai = require('samurai');
 
-    daimyo.configure({
+    samurai.configure({
       merchantKey: 'xxxxxxxxxxxxxxxxxxxxxxxx',
       apiPassword: 'xxxxxxxxxxxxxxxxxxxxxxxx',
       processorId: 'xxxxxxxxxxxxxxxxxxxxxxxx'
@@ -108,7 +108,7 @@ Samurai gatway uses transparent redirect method to process credit card
 information. The way it works is, user submits the card and billing data
 directly to Samurai, and it redirects the user back to your site attaching a
 payment method token to the request. You have to access to credit card data in
-any part of the work flow. Daimyo provides a `create` method, which allows you
+any part of the work flow. samurai-client-nodejs provides a `create` method, which allows you
 to create a payment method without using the transparent redirect. You may use
 this method if you really cannot use the transparent redirect, and you find
 Ashigaru to be broken or otherwise unusable for you. You should keep in mind,
@@ -118,36 +118,36 @@ and do not use GET requests for such requests. Also make sure that no sensitive
 data is logged or stored in any part of your application.
 
 One of the configuration options is `debug`, which enables logging of _all_ 
-data that passes through Daimyo. While it is disabled by default, you should
+data that passes through samurai-client-nodejs. While it is disabled by default, you should
 take utmost care to ensure it remains disabled in production. Double-check
 you app's configuration.
 
 ### Configuration locking
 
-Note that Daimyo performs configuration-locking after you call
-`daimyo.configure()` for the first time (and if that's successful). This
-means that you will not be able to call `daimyo.configure()` multiple times
+Note that samurai-client-nodejs performs configuration-locking after you call
+`samurai.configure()` for the first time (and if that's successful). This
+means that you will not be able to call `samurai.configure()` multiple times
 to set different options. You need to set all options beforehand. 
 
 This is a security feature that prevents accidental/malicious resetting of
 critical options. 
 
-Calling `daimyo.option()` will also fail after configuration has been locked.
-You can use multiple calls to `daimyo.options()` to set an option
+Calling `samurai.option()` will also fail after configuration has been locked.
+You can use multiple calls to `samurai.options()` to set an option
 multiple times and it won't lead to locking if the configuration has not been
 locked already.
 
-Althoug using `daimyo.option()` may sound more convenient, you should set all
+Althoug using `samurai.option()` may sound more convenient, you should set all
 critical core options (including `debug`, `enabled`, and `sandbox`) using the
-`daimyo.configure()` method for security reasons.
+`samurai.configure()` method for security reasons.
 
-Future version of Daimyo may simply lock any option that has been set once
-without errors using either `daimyo.configure()` or `daimyo.option()`, so you
-should not rely on the behavior of `daimyo.option()` to circumvent
+Future version of samurai-client-nodejs may simply lock any option that has been set once
+without errors using either `samurai.configure()` or `samurai.option()`, so you
+should not rely on the behavior of `samurai.option()` to circumvent
 configuration locking.
 
 Currently, the only exception to configuration locking is the `currency`
-parameter, which can be set any number of times. Future version of Daimyo may
+parameter, which can be set any number of times. Future version of samurai-client-nodejs may
 include more such non-critical options.
 
 See the ``config`` module documentation for more information.
@@ -159,7 +159,7 @@ you can create a new payment method using the `create` method. Suppse you have
 received billing and creadit card data from your user. You can now create a new
 Card object use that data.
 
-    var card = new daimyo.Card({
+    var card = new samurai.Card({
       number: data.cardNumber,
       csc: data.csc,
       firstName: data.firstName,
@@ -198,7 +198,7 @@ manually (or allow the user to set it).
 
 Here is an example of initializing a new card object:
 
-    var card = new daimyo.Card({
+    var card = new samurai.Card({
       number: '4111-1111-1111-1111',
       csc: '123',
       year: 2012,
@@ -252,7 +252,7 @@ callback function. The error object will have following properties:
 
 Common error messages may include:
 
- + 'Error making create payment method request': Daimyo is not properly
+ + 'Error making create payment method request': samurai-client-nodejs is not properly
    configured (e.g., missing Samurai gateway credentials), or the request
    failed for some reason and the response was unreadable (e.g., Samurai was
    offline)
@@ -278,7 +278,7 @@ the payment method using the `create` method. You can now use the `load` method
 to fetch payment method details from Samurai server.
 
     var myToken = 'xxxxxxxxxxxxxxxxxxxxxxxx';
-    var card = new daimyo.Card({token: myToken});
+    var card = new samurai.Card({token: myToken});
     card.load(function(err) {
       // Handle error
     });
@@ -306,7 +306,7 @@ error messages:
 In addition, the following error is different from the `create` method:
 
  + 'Gateway responded with non-200 status': This means that the request was
-   malformed, and it is most likely due to a Daimyo bug. Please report full
+   malformed, and it is most likely due to a samurai-client-nodejs bug. Please report full
    error details along with your bug report.
 
 ### Updating the payment method
@@ -366,7 +366,7 @@ methods.
 
 ### Making transactions
 
-Transactions are made using the `daimyo.Transaction` constructor and resulting
+Transactions are made using the `samurai.Transaction` constructor and resulting
 transaction objects.
 
 There are currenly 5 transaction types supported by Samurai: 
@@ -390,7 +390,7 @@ options object. The data to be passed via this parameter depends on the
 transaction type, and they are discussed further below. The layout of the
 options object looks like this:
 
-    var transaction = new daimyo.Transaction({
+    var transaction = new samurai.Transaction({
       type: 'purchase',
       data: {
         amount: 123.45,
