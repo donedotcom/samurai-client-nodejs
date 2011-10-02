@@ -22,7 +22,9 @@ testKeyBases.forEach(function(base) {
 
 // START TESTING
 
-test['Initial state'] = function(exit) {
+var tests = {};
+
+tests.initialState = function(test) {
   config.should.respondTo('option');
   config.option('merchantKey').should.equal('');
   config.option('merchantPassword').should.equal('');
@@ -34,9 +36,10 @@ test['Initial state'] = function(exit) {
   config.option('allowedCurrencies').should.not.be.empty;
   config.option('allowedCurrencies').should.contain('USD');
   config.option('allowMultipleSetOption').should.equal(false);
+  test.done();
 };
 
-test['Configuration requires all three keys'] = function(exit) {
+tests.configurationRequiresAllThreeKeys = function(test) {
   assert.throws(function() {
     config.configure({});
   });
@@ -61,9 +64,11 @@ test['Configuration requires all three keys'] = function(exit) {
       merchantPassword: testKeys[1]
     });
   });
+
+  test.done();
 };
 
-test['Configuration fails with invalid-looking keys'] = function(exit) {
+tests.configurationFailsWithInvalidLookingKeys = function(test) {
   assert.throws(function() {
     config.configure({
       merchantKey: testKeys[0],
@@ -87,9 +92,11 @@ test['Configuration fails with invalid-looking keys'] = function(exit) {
       processorToken: testKeys[1]
     });
   });
+
+  test.done();
 };
 
-test['Proper configuration modifies settings correctly'] = function(exit) {
+tests.properConfigurationModifiesSettingsCorrectly = function(test) {
   config.configure({
     merchantKey: testKeys[0],
     merchantPassword: testKeys[1],
@@ -99,9 +106,10 @@ test['Proper configuration modifies settings correctly'] = function(exit) {
   config.option('merchantKey').should.equal(testKeys[0]);
   config.option('merchantPassword').should.equal(testKeys[1]);
   config.option('processorToken').should.equal(testKeys[2]);
+  test.done();
 };
 
-test['Setting individual configuration options'] = function(exit) {
+tests.settingIndividualConfigurationOptions = function(test) {
   config.option('merchantKey', testKeys[0]);
   config.option('merchantKey').should.equal(testKeys[0]);
 
@@ -155,4 +163,8 @@ test['Setting individual configuration options'] = function(exit) {
   assert.throws(function() {
     config.option('processorToken', badKeys[0]);
   }, 'Not valid processorToken');
+
+  test.done();
 };
+
+exports.config = tests;
