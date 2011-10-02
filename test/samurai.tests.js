@@ -60,7 +60,7 @@ var bogusCard = {
   month: testExpiredDate[1].toString()
 };
 
-test['Configure and lock configuration'] = function(exit) {
+test['Configure and lock configuration'] = function(done) {
   testSettings.allowMultipleSetOption = false;
   samurai.configure(testSettings);
   assert.throws(function() {
@@ -69,18 +69,20 @@ test['Configure and lock configuration'] = function(exit) {
   assert.throws(function() {
     samurai.option('debug', false);
   });
+  done();
 };
 
-test['samurai module has Card constructor'] = function(exit) {
+test['samurai module has Card constructor'] = function(done) {
   var Card;
   var card;
 
   samurai.should.have.property('Card');
   samurai.Card.should.be.a('function');
   Card = samurai.Card;
+  done();
 };
 
-test['Creating a new card'] = function(exit) {
+test['Creating a new card'] = function(done) {
   var Card = samurai.Card;
 
   card = new Card(testCard);
@@ -117,9 +119,10 @@ test['Creating a new card'] = function(exit) {
 
   card.should.have.property('zip');
   card.zip.should.equal('99561');
+  done();
 };
 
-test['Creating a bogus card'] = function(exit) {
+test['Creating a bogus card'] = function(done) {
   var Card = samurai.Card;
 
   card = new Card(bogusCard);
@@ -132,18 +135,20 @@ test['Creating a bogus card'] = function(exit) {
 
   card.should.have.property('csc');
   card.csc.should.equal('14111');
+  done();
 };
 
 // GH: #1
-test['Card number should be stripped of non-digit elements'] = function(exit) {
+test['Card number should be stripped of non-digit elements'] = function(done) {
   card = new samurai.Card({
     number: '4111-1111-1111-1111',
     csc: '123'
   });
   card.number.should.equal('4111111111111111');
+  done();
 };
 
-test['Creating card without card number or CSC throws'] = function(exit) {
+test['Creating card without card number or CSC throws'] = function(done) {
   var Card = samurai.Card;
 
   assert.throws(function() {
@@ -162,9 +167,10 @@ test['Creating card without card number or CSC throws'] = function(exit) {
     });
   }, 'Card number is required');
 
+  done();
 };
 
-test['2-digit or 1-digit year converts to 4-digits'] = function(exit) {
+test['2-digit or 1-digit year converts to 4-digits'] = function(done) {
   var Card = samurai.Card;
 
   var card = new Card({
@@ -181,17 +187,19 @@ test['2-digit or 1-digit year converts to 4-digits'] = function(exit) {
   });
 
   card.year.should.equal((Math.floor(new Date().getFullYear() / 100) * 100) + 15);
+  done();
 };
 
-test['Year is normalized with setting year property'] = function(exit) {
+test['Year is normalized with setting year property'] = function(done) {
   var Card = samurai.Card;
   
   var card = new Card(testCard);
   card.year = '3';
   card.year.should.equal((Math.floor(new Date().getFullYear() / 10) * 10) + 3);
+  done();
 };
 
-test['Cannot set invalid month'] = function(exit) {
+test['Cannot set invalid month'] = function(done) {
   var Card = samurai.Card;
 
   var card = new Card({
@@ -206,9 +214,10 @@ test['Cannot set invalid month'] = function(exit) {
 
   card.month = '13';
   should.not.exist(card.month);
+  done();
 };
 
-test['Card validation'] = function(exit) {
+test['Card validation'] = function(done) {
   var Card = samurai.Card;
 
   var card = new Card(testCard);
@@ -218,9 +227,10 @@ test['Card validation'] = function(exit) {
 
   card = new Card(bogusCard);
   card.isValid().should.not.be.ok;
+  done();
 };
 
-test['Card expiration check'] = function(exit) {
+test['Card expiration check'] = function(done) {
   var Card = samurai.Card;
 
   card = new Card(testCard);
@@ -229,9 +239,10 @@ test['Card expiration check'] = function(exit) {
 
   card = new Card(bogusCard);
   card.isExpired().should.be.ok;
+  done();
 };
 
-test['Create method sets a token'] = function(exit) {
+test['Create method sets a token'] = function(done) {
   var Card = samurai.Card;
   var card = new Card(testCard);
   
@@ -240,10 +251,11 @@ test['Create method sets a token'] = function(exit) {
   card.create(function(err) {
     should.not.exist(err);
     card.token.should.match(/^[0-9a-f]{24}$/);
+    done();
   });
 };
 
-test['Created card can load payment method data'] = function(exit) {
+test['Created card can load payment method data'] = function(done) {
   var Card = samurai.Card;
   var card = new Card(testCard);
   var card1;
@@ -276,11 +288,12 @@ test['Created card can load payment method data'] = function(exit) {
       card1.should.have.property('custom');
       card1.custom.should.have.property('test');
       card1.custom.test.should.equal('custom');
+      done();
     });
   });
 };
 
-test['Create a bad payment method'] = function(exit) {
+test['Create a bad payment method'] = function(done) {
   var card = new samurai.Card(bogusCard);
 
   function onLoad(err) {
@@ -290,6 +303,7 @@ test['Create a bad payment method'] = function(exit) {
     card.messages.errors.number.should.contain(messages.str.en_US.INVALID_NUMBER);
     card.messages.errors.should.have.property('csc');
     card.messages.errors.csc.should.contain(messages.str.en_US.INVALID_CSC);
+    done();
   }
 
   card.create(function(err) {
@@ -297,7 +311,7 @@ test['Create a bad payment method'] = function(exit) {
   });
 };
 
-test['Card has _dirty property which lists changed fields'] = function(exit) {
+test['Card has _dirty property which lists changed fields'] = function(done) {
   // Initially, all fields are dirty
   var Card = samurai.Card;
   var card = new Card(testCard);
@@ -320,17 +334,18 @@ test['Card has _dirty property which lists changed fields'] = function(exit) {
     card.load(function(err) {
       should.not.exist(err);
       card._dirty.should.be.empty;
-      card.year = '17';
+      card.year = card.year + 1;
       card._dirty.should.contain('year');
-      card.month = '10';
+      card.month = (card.month + 1) % 12;
       card._dirty.should.contain('month');
       card.firstName = 'Foom';
       card._dirty.should.contain('firstName');
+      done();
     });
   });
 };
 
-test['Updating a modified card'] = function(exit) {
+test['Updating a modified card'] = function(done) {
   var Card = samurai.Card;
   var card;
 
@@ -360,11 +375,12 @@ test['Updating a modified card'] = function(exit) {
       card.firstName.should.equal(testCard.firstName);
       card.lastName.should.equal(testCard.lastName);
       card.address1.should.equal(testCard.address1);
+      done();
     });
   });
 };
 
-test['Retain card'] = function(exit) {
+test['Retain card'] = function(done) {
   var card = new samurai.Card(testCard);
 
   card.create(function(err) {
@@ -381,12 +397,13 @@ test['Retain card'] = function(exit) {
       card.firstName.should.equal(testCard.firstName);
       card.lastName.should.equal(testCard.lastName);
       card.address1.should.equal(testCard.address1);
+      done();
     });
   });
 
 };
 
-test['Redact card'] = function(exit) {
+test['Redact card'] = function(done) {
   var card = new samurai.Card(testCard);
 
   card.create(function(err) {
@@ -396,13 +413,14 @@ test['Redact card'] = function(exit) {
       card.redact(function(err) {
         card.method.retained.should.equal(true);
         card.method.redacted.should.equal(true);
+        done();
       });
     });
   });
 
 };
 
-test['Creating new transaction object throws if no type'] = function(exit) {
+test['Creating new transaction object throws if no type'] = function(done) {
   var transaction;
 
   assert.throws(function() {
@@ -411,9 +429,10 @@ test['Creating new transaction object throws if no type'] = function(exit) {
       data: {amount: 10}
     });
   });
+  done();
 };
 
-test['Creating new transaction throws with missing data'] = function(exit) {
+test['Creating new transaction throws with missing data'] = function(done) {
   var transaction;
 
   assert.throws(function() {
@@ -422,9 +441,10 @@ test['Creating new transaction throws with missing data'] = function(exit) {
       data: null
     });
   });
+  done();
 };
 
-test['New transaction has a few extra properties'] = function(exit) {
+test['New transaction has a few extra properties'] = function(done) {
   var transaction = new samurai.Transaction({
     type: 'purchase',
     data: {amount: 10}
@@ -437,9 +457,10 @@ test['New transaction has a few extra properties'] = function(exit) {
   transaction.data.type.should.equal('purchase');
   transaction.data.currency.should.equal(samurai.option('currency'));
   transaction.should.have.property('path');
+  done();
 };
 
-test['Simple transactions do not set type and currency'] = function(exit) {
+test['Simple transactions do not set type and currency'] = function(done) {
   var transaction = new samurai.Transaction({
     type: 'void',
     transactionId: '111111111111111111111111',
@@ -448,9 +469,10 @@ test['Simple transactions do not set type and currency'] = function(exit) {
 
   transaction.data.should.not.have.property('currency');
   transaction.data.should.not.have.property('type');
+  done();
 };
 
-test['Execute transaction'] = function(exit) {
+test['Execute transaction'] = function(done) {
   var transaction;
 
   function callback(err) {
@@ -464,6 +486,7 @@ test['Execute transaction'] = function(exit) {
     transaction.should.have.property('messages');
     transaction.messages.should.have.property('info');
     transaction.messages.info.should.have.property('transaction'); transaction.messages.info.transaction.should.contain('Success');
+    done();
   }
   
   transaction = new samurai.Transaction({
@@ -487,7 +510,7 @@ test['Execute transaction'] = function(exit) {
 
 };
 
-test['Execute transaction with bad card'] = function(exit) {
+test['Execute transaction with bad card'] = function(done) {
   var transaction;
 
   function callback(err) {
@@ -499,6 +522,7 @@ test['Execute transaction with bad card'] = function(exit) {
     transaction.messages.should.have.property('errors');
     transaction.messages.errors.should.have.property('transaction');
     transaction.messages.errors.transaction.should.contain('Declined');
+    done();
   }
 
   transaction = new samurai.Transaction({
@@ -520,7 +544,7 @@ test['Execute transaction with bad card'] = function(exit) {
 
 };
 
-test['Using transactions with wrong currency'] = function(exit) {
+test['Using transactions with wrong currency'] = function(done) {
   var transaction;
 
   function callback(err) {
@@ -532,6 +556,7 @@ test['Using transactions with wrong currency'] = function(exit) {
     err.should.have.property('details');
     err.details.should.equal('GBP');
     transaction.should.not.have.property('receipt');
+    done();
   }
 
   transaction = new samurai.Transaction({
@@ -553,7 +578,7 @@ test['Using transactions with wrong currency'] = function(exit) {
 
 };
 
-test['Card with no token cannot be used for transaction'] = function(exit) {
+test['Card with no token cannot be used for transaction'] = function(done) {
   var transaction;
 
   function callback(err) {
@@ -563,6 +588,7 @@ test['Card with no token cannot be used for transaction'] = function(exit) {
     err.should.have.property('message');
     err.message.should.equal('Card has no token');
     transaction.should.not.have.property('receipt');
+    done();
   }
 
   transaction = new samurai.Transaction({
