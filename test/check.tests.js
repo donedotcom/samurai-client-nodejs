@@ -10,9 +10,10 @@
  * purchases. They are only useful for testing.
  */
 
-var assert = require('assert');
-var should = require('should');
 var check = require('../lib/check');
+var assert = require('assert');
+var helpers = require('./helpers');
+var testCase = require('nodeunit').testCase;
 
 var validCardNos = {
   '378282246310005': 'American Express',
@@ -32,48 +33,50 @@ var validCardNos = {
   '4222222222222': 'Visa'
 };
 
-var tests = {};
+exports.check = testCase({
 
-tests.issuerCheck = function(test) {
-  test.expect(10);
-  Object.keys(validCardNos).forEach(function(card) {
-    assert.equal(check.getIssuer(card), validCardNos[card]);
-  });
-  test.done();
-};
+  issuerCheck: function(test) {
+    test.expect(15);
+    Object.keys(validCardNos).forEach(function(card) {
+      test.equal(check.getIssuer(card), validCardNos[card]);
+    });
+    test.done();
+  },
 
-tests.issuerCheckWithFullDetails = function(test) {
-  Object.keys(validCardNos).forEach(function(card) {
-    var issuerDetails = check.getIssuer(card, true);
-    issuerDetails[0] = validCardNos[card];
-    issuerDetails[1].should.be.instanceof(RegExp);
-    issuerDetails[2].should.be.instanceof(RegExp);
-  });
-  test.done();
-};
+  issuerCheckWithFullDetails: function(test) {
+    test.expect(30);
+    Object.keys(validCardNos).forEach(function(card) {
+      var issuerDetails = check.getIssuer(card, true);
+      issuerDetails[0] = validCardNos[card];
+      test.isInstanceOf(issuerDetails[1], RegExp);
+      test.isInstanceOf(issuerDetails[2], RegExp);
+    });
+    test.done();
+  },
 
-tests.mod10test = function(test) {
-  // All test cards should pass (they are all valid numbers)
-  Object.keys(validCardNos).forEach(function(card) {
-    check.mod10check(card).should.equal(card);
-  });
-  test.done();
-};
+  mod10test: function(test) {
+    test.expect(15);
+    // All test cards should pass (they are all valid numbers)
+    Object.keys(validCardNos).forEach(function(card) {
+      test.equal(check.mod10check(card), card);
+    });
+    test.done();
+  },
 
-tests.cscCheckUsingAmexAndNonAmexCard = function(test) {
-  // MasterCard
-  check.cscCheck('5555555555554444', '111').should.be.ok;
-  check.cscCheck('5555555555554444', '11').should.not.be.ok;
-  check.cscCheck('5555555555554444', '1111').should.not.be.ok;
-  check.cscCheck('5555555555554444', 'foo').should.not.be.ok;
+  cscCheckUsingAmexAndNonAmexCard: function(test) {
+    // MasterCard
+    test.ok(check.cscCheck('5555555555554444', '111'));
+    test.notOk(check.cscCheck('5555555555554444', '11'));
+    test.notOk(check.cscCheck('5555555555554444', '1111'));
+    test.notOk(check.cscCheck('5555555555554444', 'foo'));
 
-  // Amex
-  check.cscCheck('378282246310005', '111').should.not.be.ok;
-  check.cscCheck('378282246310005', '1111').should.be.ok;
-  check.cscCheck('378282246310005', '11111').should.not.be.ok;
-  check.cscCheck('378282246310005', 'foo').should.not.be.ok;
+    // Amex
+    test.notOk(check.cscCheck('378282246310005', '111'));
+    test.ok(check.cscCheck('378282246310005', '1111'));
+    test.notOk(check.cscCheck('378282246310005', '11111'));
+    test.notOk(check.cscCheck('378282246310005', 'foo'));
 
-  test.done();
-};
+    test.done();
+  }
 
-exports.check = tests;
+});

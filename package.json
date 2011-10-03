@@ -25,7 +25,6 @@
         "mersenne": ">= 0.0.3"
     },
     "devDependencies": {
-        "should": "git://github.com/FeeFighters/should.js.git",
         "nodeunit": ">= 0.4.0",
         "uglify-js": ">= 1.0.1"
     },

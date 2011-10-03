@@ -5,23 +5,17 @@
  */
 var sys = require('sys');
 var assert = require('assert');
-var should = require('should');
-var getAdjustedDateparts = require('./helpers').getAdjustedDateparts;
+var helpers = require('./helpers');
+var getAdjustedDateparts = helpers.getAdjustedDateparts;
+var getRandomAmount = helpers.getRandomAmount;
 var samurai = require('../index.js');
 var messages = require('../lib/messages');
+var testCase = require('nodeunit').testCase;
 var test = exports;
 
 var testNonExpiredDate = getAdjustedDateparts(12); // One year in future
 var testExpiredDate = getAdjustedDateparts(-12); // One year ago
 var testSettings = require('./config');
-
-// Enable sandbox, and debug
-// samurai.option('sandbox', true);
-// samurai.option('debug', true);
-samurai.option('sandbox', false);
-samurai.option('debug', false);
-samurai.option('currency', 'USD');
-samurai.option('allowedCurrencies', ['USD']);
 
 var testCard = {
   number: '5555555555554444', // MasterCard
@@ -46,7 +40,7 @@ var sandboxValidCard = {
 };
 
 var sandboxDeclinedCard = {
-  number: '4242-4242-4242-4242',
+  number: '4222222222222',
   csc: '123',
   year: testNonExpiredDate[0].toString(),
   month: testNonExpiredDate[1].toString()
@@ -60,556 +54,568 @@ var bogusCard = {
   month: testExpiredDate[1].toString()
 };
 
-var tests = {};
+//
+// Before All
+//
+samurai.option('sandbox', false);
+samurai.option('debug', true);
+samurai.option('currency', 'USD');
+samurai.option('allowedCurrencies', ['USD']);
+samurai.configure(testSettings);
 
-tests.configureAndLockConfiguration = function(test) {
-  test.expect(2);
-  testSettings.allowMultipleSetOption = false;
-  samurai.configure(testSettings);
-  assert.throws(function() {
+
+exports.samurai = testCase({
+
+  setUp: function(callback) {
+    callback();
+  },
+
+  configureAndLockConfiguration: function(test) {
+    test.expect(2);
+    testSettings.allowMultipleSetOption = false;
     samurai.configure(testSettings);
-  });
-  assert.throws(function() {
-    samurai.option('debug', false);
-  });
-  test.done();
-};
-
-tests.samuraiModuleHasCardConstructor = function(test) {
-  test.expect(2);
-  var Card;
-  var card;
-  samurai.should.have.property('Card');
-  samurai.Card.should.be.a('function');
-  Card = samurai.Card;
-  test.done();
-};
-
-tests.creatingANewCard = function(test) {
-  var Card = samurai.Card;
-
-  card = new Card(testCard);
-
-  card.should.have.property('number');
-  card.number.should.equal(testCard.number);
-
-  card.should.have.property('issuer');
-  card.issuer.should.equal('MasterCard');
-
-  card.should.have.property('year');
-  card.year.should.equal(testNonExpiredDate[0]);
-
-  card.should.have.property('month');
-  card.month.should.equal(testNonExpiredDate[1]);
-
-  card.should.have.property('firstName');
-  card.firstName.should.equal('Foo');
-
-  card.should.have.property('lastName');
-  card.lastName.should.equal('Bar');
-
-  card.should.have.property('address1');
-  card.address1.should.equal('221 Foo st');
-
-  card.should.have.property('address2');
-  card.address2.should.equal('');
-
-  card.should.have.property('city');
-  card.city.should.equal('');
-
-  card.should.have.property('state');
-  card.state.should.equal('');
-
-  card.should.have.property('zip');
-  card.zip.should.equal('99561');
-
-  test.done();
-};
-
-tests.creatingABogusCard = function(test) {
-  var Card = samurai.Card;
-
-  card = new Card(bogusCard);
-
-  card.should.have.property('number');
-  card.number.should.equal(bogusCard.number);
-
-  card.should.have.property('issuer');
-  card.issuer.should.equal('Unknown');
-
-  card.should.have.property('csc');
-  card.csc.should.equal('14111');
-
-  test.done();
-};
-
-tests.cardNumberShouldBeStrippedOfNonDigitElements = function(test) {
-  card = new samurai.Card({
-    number: '4111-1111-1111-1111',
-    csc: '123'
-  });
-  card.number.should.equal('4111111111111111');
-  test.done();
-};
-
-tests.creatingCardWithoutCardNumberOrCSCThrows = function(test) {
-  var Card = samurai.Card;
-
-  assert.throws(function() {
-    card = new Card({});
-  }, 'Card number is required');
-
-  assert.throws(function() {
-    card = new Card({
-      number: testCard.number
+    test.throws(function() {
+      samurai.configure(testSettings);
     });
-  }, 'CSC is required');
-
-  assert.throws(function() {
-    card = new Card({
-      csc: testCard.csc
+    test.throws(function() {
+      samurai.option('debug', false);
     });
-  }, 'Card number is required');
-
-  test.done();
-};
-
-tests.convert2DigitOr1DigitYearto4Digits = function(test) {
-  var Card = samurai.Card;
-
-  var card = new Card({
-    number: testCard.number,
-    csc: testCard.csc,
-    year: '2' // Should convert to 2nd year of this decade
-  });
-  card.year.should.equal((Math.floor(new Date().getFullYear() / 10) * 10) + 2);
-
-  card = new Card({
-    number: testCard.number,
-    csc: testCard.csc,
-    year: '15' // Should convert to year 15 of current century
-  });
-
-  card.year.should.equal((Math.floor(new Date().getFullYear() / 100) * 100) + 15);
-
-  test.done();
-};
-
-tests.yearIsNormalizedWithSettingYearProperty = function(test) {
-  var Card = samurai.Card;
-  
-  var card = new Card(testCard);
-  card.year = '3';
-  card.year.should.equal((Math.floor(new Date().getFullYear() / 10) * 10) + 3);
-
-  test.done();
-};
-
-tests.cannotSetInvalidMonth = function(test) {
-  var Card = samurai.Card;
-
-  var card = new Card({
-    number: testCard.number,
-    csc: testCard.csc,
-    month: '123'
-  });
-  should.not.exist(card.month);
-
-  card.month = 'foo';
-  should.not.exist(card.month);
-
-  card.month = '13';
-  should.not.exist(card.month);
-
-  test.done();
-};
-
-tests.cardValidation = function(test) {
-  var Card = samurai.Card;
-
-  var card = new Card(testCard);
-
-  card.should.respondTo('isValid');
-  card.isValid().should.be.ok;
-
-  card = new Card(bogusCard);
-  card.isValid().should.not.be.ok;
-
-  test.done();
-};
-
-tests.cardExpirationCheck = function(test) {
-  var Card = samurai.Card;
-
-  card = new Card(testCard);
-  card.should.respondTo('isExpired');
-  card.isExpired().should.not.be.ok;
-
-  card = new Card(bogusCard);
-  card.isExpired().should.be.ok;
-
-  test.done();
-};
-
-tests.createMethodSetsAToken = function(test) {
-  var Card = samurai.Card;
-  var card = new Card(testCard);
-  
-  card.should.respondTo('create');
-
-  card.create(function(err) {
-    should.not.exist(err);
-    card.token.should.match(/^[0-9a-f]{24}$/);
     test.done();
-  });
-};
+  },
 
-tests.createdCardCanLoadPaymentMethodData = function(test) {
-  var Card = samurai.Card;
-  var card = new Card(testCard);
-  var card1;
-  var token;
- 
-  card.custom = {test: 'custom'};
-
-  card.should.respondTo('load');
-  assert.throws(function() {
-    card.load();
-  }, 'Cannot load payment method without token');
-  card.create(function(err) {
-    token = card.token;
-    card1 = new Card({token: token});
-    card1.load(function(err) {
-      should.not.exist(err);
-      card1.should.have.property('method');
-      card1.method.should.have.property('createdAt');
-      card1.method.createdAt.should.be.instanceof(Date);
-      card1.method.should.have.property('updatedAt');
-      card1.method.updatedAt.should.be.instanceof(Date);
-      card1.method.should.have.property('retained');
-      card1.method.retained.should.equal(false);
-      card1.method.should.have.property('redacted');
-      card1.method.redacted.should.equal(false);
-      card1.should.have.property('custom');
-      card1.firstName.should.equal(testCard.firstName);
-      card1.lastName.should.equal(testCard.lastName);
-      card1.address1.should.equal(testCard.address1);
-      card1.should.have.property('custom');
-      card1.custom.should.have.property('test');
-      card1.custom.test.should.equal('custom');
-      test.done();
-    });
-  });
-};
-
-tests.createABadPaymentMethod = function(test) {
-  var card = new samurai.Card(bogusCard);
-
-  function onLoad(err) {
-    card.should.have.property('messages');
-    card.messages.should.have.property('errors');
-    card.messages.errors.should.have.property('number');
-    card.messages.errors.number.should.contain(messages.str.en_US.INVALID_NUMBER);
-    card.messages.errors.should.have.property('csc');
-    card.messages.errors.csc.should.contain(messages.str.en_US.INVALID_CSC);
+  samuraiModuleHasCardConstructor: function(test) {
+    test.expect(2);
+    test.hasProperty(samurai, 'Card');
+    test.equal(typeof samurai.Card, 'function');
     test.done();
-  }
+  },
 
-  card.create(function(err) {
-    card.load(onLoad);
-  });
-};
+  creatingANewCard: function(test) {
+    test.expect(22);
 
-tests.cardHasDirtyPropertyWhichListsChangedFields = function(test) {
+    var card = new samurai.Card(testCard);
 
-  // Initially, all fields are dirty
-  var Card = samurai.Card;
-  var card = new Card(testCard);
-  var token;
+    test.hasProperty( card, 'number'  );
+    test.equal( card.number, testCard.number );
 
-  card.should.have.property('_dirty');
-  card._dirty.should.not.be.empty;
-  card._dirty.should.contain('number');
-  card._dirty.should.contain('csc');
-  card._dirty.should.contain('year');
-  card._dirty.should.contain('month');
-  card._dirty.should.contain('firstName');
-  card._dirty.should.contain('lastName');
-  card._dirty.should.contain('address1');
-  card._dirty.should.contain('zip');
+    test.hasProperty( card, 'issuer'  );
+    test.equal( card.issuer, 'MasterCard' );
 
-  card.create(function(err) {
-    should.not.exist(err);
-    card._dirty.should.be.empty;
-    card.load(function(err) {
-      should.not.exist(err);
-      card._dirty.should.be.empty;
-      card.year = card.year + 1;
-      card._dirty.should.contain('year');
-      card.month = (card.month + 1) % 12;
-      card._dirty.should.contain('month');
-      card.firstName = 'Foom';
-      card._dirty.should.contain('firstName');
+    test.hasProperty( card, 'year'  );
+    test.equal( card.year, testNonExpiredDate[0] );
+
+    test.hasProperty( card, 'month'  );
+    test.equal( card.month, testNonExpiredDate[1] );
+
+    test.hasProperty( card, 'firstName'  );
+    test.equal( card.firstName, 'Foo' );
+
+    test.hasProperty( card, 'lastName'  );
+    test.equal( card.lastName, 'Bar' );
+
+    test.hasProperty( card, 'address1'  );
+    test.equal( card.address1, '221 Foo st' );
+
+    test.hasProperty( card, 'address2'  );
+    test.equal( card.address2, '' );
+
+    test.hasProperty( card, 'city'  );
+    test.equal( card.city, '' );
+
+    test.hasProperty( card, 'state'  );
+    test.equal( card.state, '' );
+
+    test.hasProperty( card, 'zip'  );
+    test.equal( card.zip, '99561' );
+
+    test.done();
+  },
+
+  creatingABogusCard: function(test) {
+    test.expect(6);
+
+    var card = new samurai.Card(bogusCard);
+
+    test.hasProperty( card, 'number'  );
+    test.equal( card.number, bogusCard.number );
+
+    test.hasProperty( card, 'issuer'  );
+    test.equal( card.issuer, 'Unknown' );
+
+    test.hasProperty( card, 'csc'  );
+    test.equal( card.csc, '14111' );
+
+    test.done();
+  },
+
+  cardNumberShouldBeStrippedOfNonDigitElements: function(test) {
+    test.expect(1);
+    var card = new samurai.Card({
+      number: '4111-1111-1111-1111',
+      csc: '123'
+    });
+    test.equal( card.number, '4111111111111111');
+    test.done();
+  },
+
+  creatingCardWithoutCardNumberOrCSCThrows: function(test) {
+    test.expect(3);
+
+    test.throws(function() {
+      card = new samurai.Card({});
+    }, 'Card number is required');
+
+    test.throws(function() {
+      card = new samurai.Card({
+        number: testCard.number
+      });
+    }, 'CSC is required');
+
+    test.throws(function() {
+      card = new samurai.Card({
+        csc: testCard.csc
+      });
+    }, 'Card number is required');
+
+    test.done();
+  },
+
+  convert2DigitOr1DigitYearto4Digits: function(test) {
+    test.expect(2);
+
+    var card = new samurai.Card({
+      number: testCard.number,
+      csc: testCard.csc,
+      year: '2' // Should convert to 2nd year of this decade
+    });
+    test.equal( card.year, 2012);
+
+    card = new samurai.Card({
+      number: testCard.number,
+      csc: testCard.csc,
+      year: '15' // Should convert to year 15 of current century
+    });
+    test.equal( card.year, 2015);
+
+    test.done();
+  },
+
+  yearIsNormalizedWithSettingYearProperty: function(test) {
+    test.expect(1);
+
+    var card = new samurai.Card(testCard);
+    card.year = '3';
+    test.equal( card.year, 2013);
+
+    test.done();
+  },
+
+  cannotSetInvalidMonth: function(test) {
+    test.expect(3);
+
+    var card = new samurai.Card({
+      number: testCard.number,
+      csc: testCard.csc,
+      month: '123'
+    });
+    test.isUndefined(card.month);
+
+    card.month = 'foo';
+    test.isUndefined(card.month);
+
+    card.month = '13';
+    test.isUndefined(card.month);
+
+    test.done();
+  },
+
+  cardValidation: function(test) {
+    test.expect(2);
+
+    var card = new samurai.Card(testCard);
+    test.equal( card.isValid(), true);
+
+    card = new samurai.Card(bogusCard);
+    test.equal( card.isValid(), false);
+
+    test.done();
+  },
+
+  cardExpirationCheck: function(test) {
+    test.expect(2);
+
+    var card = new samurai.Card(testCard);
+    test.equal( card.isExpired(), false);
+
+    card = new samurai.Card(bogusCard);
+    test.equal( card.isExpired(), true);
+
+    test.done();
+  },
+
+  createMethodSetsAToken: function(test) {
+    test.expect(2);
+    var card = new samurai.Card(testCard);
+
+    card.create(function(err) {
+      test.isUndefined(err);
+      test.ok(card.token =~ /^[0-9a-f]{24}$/);
       test.done();
     });
-  });
-};
+  },
 
-tests.updatedAModifiedCard = function(test) {
-  var Card = samurai.Card;
-  var card;
+  createdCardCanLoadPaymentMethodData: function(test) {
+    test.expect(17);
+    var card = new samurai.Card(testCard);
+    var card1, token;
 
-  function onUpdate() {
-    }
+    card.custom = {test: 'custom'};
 
-  card = new Card(testCard);
-  card.create(function() {
-    card.city.should.not.equal('Smallville');
-    card.city = 'Smallville';
-    card.month = '12';
-    card._dirty.should.contain('city');
-    card._dirty.should.contain('month');
-    card.update(function(err) {
-      card._dirty.should.be.empty;
-      card.city.should.equal('Smallville');
-      card.month.should.equal(12);
-      card.should.have.property('method');
-      card.method.should.have.property('createdAt');
-      card.method.createdAt.should.be.instanceof(Date);
-      card.method.should.have.property('updatedAt');
-      card.method.updatedAt.should.be.instanceof(Date);
-      card.method.should.have.property('retained');
-      card.method.retained.should.equal(false);
-      card.method.should.have.property('redacted');
-      card.method.redacted.should.equal(false);
-      card.firstName.should.equal(testCard.firstName);
-      card.lastName.should.equal(testCard.lastName);
-      card.address1.should.equal(testCard.address1);
-      test.done();
-    });
-  });
-};
+    test.throws(function() {
+      card.load();
+    }, 'Cannot load payment method without token');
 
-tests.retainCard = function(test) {
-  var card = new samurai.Card(testCard);
-
-  card.create(function(err) {
-    card.retain(function(err) {
-      card.should.have.property('method');
-      card.method.should.have.property('createdAt');
-      card.method.createdAt.should.be.instanceof(Date);
-      card.method.should.have.property('updatedAt');
-      card.method.updatedAt.should.be.instanceof(Date);
-      card.method.should.have.property('retained');
-      card.method.retained.should.equal(true);
-      card.method.should.have.property('redacted');
-      card.method.redacted.should.equal(false);
-      card.firstName.should.equal(testCard.firstName);
-      card.lastName.should.equal(testCard.lastName);
-      card.address1.should.equal(testCard.address1);
-      test.done();
-    });
-  });
-};
-
-tests.redactCard = function(test) {
-  var card = new samurai.Card(testCard);
-
-  card.create(function(err) {
-    card.retain(function(err) {
-      card.method.retained.should.equal(true);
-      card.method.redacted.should.equal(false);
-      card.redact(function(err) {
-        card.method.retained.should.equal(true);
-        card.method.redacted.should.equal(true);
+    card.create(function(err) {
+      token = card.token;
+      card1 = new samurai.Card({token: token});
+      card1.load(function(err) {
+        test.isUndefined(err);
+        test.hasProperty(card1, 'method');
+        test.hasProperty(   card1.method, 'createdAt'  );
+        test.isInstanceOf(  card1.method.createdAt, Date );
+        test.hasProperty(   card1.method, 'updatedAt'  );
+        test.isInstanceOf(  card1.method.updatedAt, Date );
+        test.hasProperty(   card1.method, 'retained'  );
+        test.equal(         card1.method.retained, false  );
+        test.hasProperty(   card1.method, 'redacted'  );
+        test.equal(         card1.method.redacted, false  );
+        test.equal(         card1.firstName, testCard.firstName  );
+        test.equal(         card1.lastName, testCard.lastName  );
+        test.equal(         card1.address1, testCard.address1  );
+        test.hasProperty(   card1, 'custom'  );
+        test.hasProperty(   card1.custom, 'test'  );
+        test.equal(         card1.custom.test, 'custom');
         test.done();
       });
     });
-  });
-};
+  },
 
-tests.creatingNewTransactionObjectThrowsIfNoType = function(test) {
-  var transaction;
+  createABadPaymentMethod: function(test) {
+    test.expect(6);
+    var card = new samurai.Card(bogusCard);
 
-  assert.throws(function() {
-    transaction = new samurai.Transaction({
-      type: null, 
-      data: {amount: 10}
+    function onLoad(err) {
+      test.hasProperty(card, 'messages');
+      test.hasProperty(card.messages, 'errors');
+      test.hasProperty(card.messages.errors, 'number');
+      test.contains(card.messages.errors.number, messages.str.en_US.INVALID_NUMBER);
+      test.hasProperty(card.messages.errors, 'csc');
+      test.contains(card.messages.errors.csc, messages.str.en_US.INVALID_CSC);
+      test.done();
+    }
+
+    card.create(function(err) {
+      card.load(onLoad);
     });
-  });
+  },
 
-  test.done();
-};
+  cardHasDirtyPropertyWhichListsChangedFields: function(test) {
+    test.expect(17);
 
-tests.creatingNewTransactionThrowsWithMissingData = function(test) {
-  var transaction;
+    // Initially, all fields are dirty
+    var card = new samurai.Card(testCard);
 
-  assert.throws(function() {
+    test.hasProperty( card, '_dirty'  );
+    test.isNotEmpty(  card._dirty );
+    test.contains(  card._dirty, 'number' );
+    test.contains(  card._dirty, 'csc' );
+    test.contains(  card._dirty, 'year' );
+    test.contains(  card._dirty, 'month' );
+    test.contains(  card._dirty, 'firstName' );
+    test.contains(  card._dirty, 'lastName' );
+    test.contains(  card._dirty, 'address1' );
+    test.contains(  card._dirty, 'zip' );
+
+    card.create(function(err) {
+      test.isUndefined(err);
+      test.isEmpty(card._dirty);
+      card.load(function(err) {
+        test.isUndefined(err);
+        test.isEmpty(card._dirty);
+        card.year = card.year + 1;
+        test.contains(card._dirty, 'year');
+        card.month = (card.month + 1) % 12;
+        test.contains(card._dirty, 'month');
+        card.firstName = 'Foom';
+        test.contains(card._dirty, 'firstName');
+        test.done();
+      });
+    });
+  },
+
+  updatedAModifiedCard: function(test) {
+    test.expect(18);
+
+    var card = new samurai.Card(testCard);
+    card.create(function(err) {
+      test.notEqual(card.city, 'Smallville');
+      card.city = 'Smallville';
+      card.month = '12';
+      test.contains(card._dirty, 'city');
+      test.contains(card._dirty, 'month');
+      card.update(function(err) {
+        test.isEmpty(       card._dirty );
+        test.equal(         card.city, 'Smallville' );
+        test.equal(         card.month,  12 );
+        test.hasProperty(   card, 'method'  );
+        test.hasProperty(   card.method, 'createdAt'  );
+        test.isInstanceOf(  card.method.createdAt, Date );
+        test.hasProperty(   card.method, 'updatedAt'  );
+        test.isInstanceOf(  card.method.updatedAt, Date );
+        test.hasProperty(   card.method, 'retained'  );
+        test.equal(         card.method.retained, false  );
+        test.hasProperty(   card.method, 'redacted'  );
+        test.equal(         card.method.redacted, false  );
+        test.equal(         card.firstName, testCard.firstName  );
+        test.equal(         card.lastName, testCard.lastName  );
+        test.equal(         card.address1, testCard.address1  );
+        test.done();
+      });
+    });
+  },
+
+  retainCard: function(test) {
+    test.expect(12);
+    var card = new samurai.Card(testCard);
+
+    card.create(function(err) {
+      card.retain(function(err) {
+        test.hasProperty(   card, 'method' );
+        test.hasProperty(   card.method, 'createdAt'  );
+        test.isInstanceOf(  card.method.createdAt, Date );
+        test.hasProperty(   card.method, 'updatedAt'  );
+        test.isInstanceOf(  card.method.updatedAt, Date );
+        test.hasProperty(   card.method, 'retained'  );
+        test.equal(         card.method.retained, true  );
+        test.hasProperty(   card.method, 'redacted'  );
+        test.equal(         card.method.redacted, false  );
+        test.equal(         card.firstName, testCard.firstName  );
+        test.equal(         card.lastName, testCard.lastName  );
+        test.equal(         card.address1, testCard.address1  );
+        test.done();
+      });
+    });
+  },
+
+  redactCard: function(test) {
+    test.expect(4);
+    var card = new samurai.Card(testCard);
+
+    card.create(function(err) {
+      card.retain(function(err) {
+        test.ok(card.method.retained);
+        test.notOk(card.method.redacted);
+        card.redact(function(err) {
+          test.ok(card.method.retained);
+          test.ok(card.method.redacted);
+          test.done();
+        });
+      });
+    });
+  },
+
+  creatingNewTransactionObjectThrowsIfNoType: function(test) {
+    test.expect(1);
+    var transaction;
+
+    test.throws(function() {
+      transaction = new samurai.Transaction({
+        type: null,
+        data: {amount: getRandomAmount()}
+      });
+    });
+
+    test.done();
+  },
+
+  creatingNewTransactionThrowsWithMissingData: function(test) {
+    test.expect(1);
+    var transaction;
+
+    test.throws(function() {
+      transaction = new samurai.Transaction({
+        type: 'purchase',
+        data: null
+      });
+    });
+
+    test.done();
+  },
+
+  newTransactionHasAFewExtraProperties: function(test) {
+    test.expect(7);
+
+    var transaction = new samurai.Transaction({
+      type: 'purchase',
+      data: {amount: getRandomAmount()}
+    });
+
+    test.hasProperty( transaction, 'type' );
+    test.equal(       transaction.type, 'purchase' );
+    test.hasProperty( transaction, 'data' );
+    test.hasKeys(     transaction.data, ['amount', 'type', 'currency'] );
+    test.equal(       transaction.data.type, 'purchase' );
+    test.equal(       transaction.data.currency, samurai.option('currency') );
+    test.hasProperty( transaction, 'path' );
+
+    test.done();
+  },
+
+  simpleTransactionsDoNotSetTypeAndCurrency: function(test) {
+    test.expect(2);
+
+    var transaction = new samurai.Transaction({
+      type: 'void',
+      transactionId: '111111111111111111111111',
+      data: {}
+    });
+
+    test.hasNoProperty( transaction.data, 'currency' );
+    test.hasNoProperty( transaction.data, 'type' );
+
+    test.done();
+  },
+
+  executeTransaction: function(test) {
+    test.expect(11);
+    var transaction;
+
+    function callback(err) {
+      test.isUndefined(err);
+      test.hasProperty( transaction, 'receipt' );
+      test.hasProperty( transaction.receipt, 'success' );
+      test.ok(          transaction.receipt.success );
+      test.hasProperty( transaction.receipt, 'custom'  );
+      test.equal(       transaction.receipt.custom.test, 'custom' );
+      test.hasProperty( transaction, 'messages'  );
+      test.hasProperty( transaction.messages, 'info' );
+      test.hasProperty( transaction.messages.info, 'transaction' );
+      test.contains(    transaction.messages.info.transaction, 'Success' );
+      test.done();
+    }
+
     transaction = new samurai.Transaction({
       type: 'purchase',
-      data: null
+      data: {
+        billingReference: Math.floor(Math.random()*100),
+        customerReference: '123',
+        amount: getRandomAmount(),
+        custom: {test: 'custom'}
+      }
     });
-  });
 
-  test.done();
-};
+    // First we need a card
+    var card = new samurai.Card(sandboxValidCard);
 
-tests.newTransactionHasAFewExtraProperties = function(test) {
-  var transaction = new samurai.Transaction({
-    type: 'purchase',
-    data: {amount: 10}
-  });
+    card.create(function(err) {
+      // We have the token now.
+      test.isDefined(  card.token  );
+      transaction.process(card, callback);
+    });
+  },
 
-  transaction.should.have.property('type');
-  transaction.type.should.equal('purchase');
-  transaction.should.have.property('data');
-  transaction.data.should.have.keys(['amount', 'type', 'currency']);
-  transaction.data.type.should.equal('purchase');
-  transaction.data.currency.should.equal(samurai.option('currency'));
-  transaction.should.have.property('path');
+  executeTransactionWithDeclinedCard: function(test) {
+    test.expect(9);
+    var transaction;
 
-  test.done();
-};
-
-tests.simpleTransactionsDoNotSetTypeAndCurrency = function(test) {
-  var transaction = new samurai.Transaction({
-    type: 'void',
-    transactionId: '111111111111111111111111',
-    data: {}
-  });
-
-  transaction.data.should.not.have.property('currency');
-  transaction.data.should.not.have.property('type');
-
-  test.done();
-};
-
-tests.executeTransaction = function(test) {
-  var transaction;
-
-  function callback(err) {
-    should.not.exist(err);
-    transaction.should.have.property('receipt');
-    transaction.receipt.should.have.property('success');
-    transaction.receipt.success.should.equal(true);
-    transaction.receipt.should.have.property('custom');
-    transaction.receipt.custom.should.have.property('test');
-    transaction.receipt.custom.test.should.equal('custom');
-    transaction.should.have.property('messages');
-    transaction.messages.should.have.property('info');
-    transaction.messages.info.should.have.property('transaction'); transaction.messages.info.transaction.should.contain('Success');
-    test.done();
-  }
-  
-  transaction = new samurai.Transaction({
-    type: 'purchase',
-    data: {
-      billingReference: '123',
-      customerReference: '123',
-      amount: 10,
-      custom: {test: 'custom'}
+    function callback(err) {
+      test.isUndefined(err);
+      test.hasProperty( transaction, 'receipt' );
+      test.hasProperty( transaction.receipt, 'success' );
+      test.equal(       transaction.receipt.success, false  );
+      test.hasProperty( transaction, 'messages'  );
+      test.hasProperty( transaction.messages, 'errors'  );
+      test.hasProperty( transaction.messages.errors, 'transaction'  );
+      test.contains(    transaction.messages.errors.transaction, 'Declined' );
+      test.done();
     }
-  });
 
-  // First we need a card
-  var card = new samurai.Card(sandboxValidCard);
+    transaction = new samurai.Transaction({
+      type: 'purchase',
+      data: {
+        billingReference: Math.floor(Math.random()*100),
+        customerReference: '123',
+        amount: 2  // Declined amount code
+      }
+    });
 
-  card.create(function(err) {
-    // We have the token now.
-    card.should.have.property('token');
+    var card = new samurai.Card(sandboxDeclinedCard);
+
+    card.create(function(err) {
+      // We have the token now.
+      test.isDefined(  card.token  );
+      transaction.process(card, callback);
+    });
+  },
+
+  usingTransactionsWithWrongCurrency: function(test) {
+    test.expect(9);
+    var transaction;
+
+    function callback(err) {
+      test.isDefined(err);
+      test.hasProperty( err, 'category' );
+      test.equal(       err.category, 'system' );
+      test.hasProperty( err, 'message' );
+      test.equal(       err.message, 'Currency not allowed'  );
+      test.hasProperty( err, 'details' );
+      test.equal(       err.details, 'GBP'  );
+      test.hasNoProperty( transaction, 'receipt' );
+      test.done();
+    }
+
+    transaction = new samurai.Transaction({
+      type: 'purchase',
+      data: {
+        amount: getRandomAmount(),
+        currency: 'GBP'
+      }
+    });
+
+    // First we need a card
+    var card = new samurai.Card(sandboxValidCard);
+
+    card.create(function(err) {
+      // We have the token now.
+      test.isDefined(  card.token  );
+      transaction.process(card, callback);
+    });
+  },
+
+  cardWithNoTokenCannotBeUsedForTransaction: function(test) {
+    test.expect(6);
+    var transaction;
+
+    function callback(err) {
+      test.isDefined(err);
+      test.hasProperty(   err, 'category' );
+      test.equal(         err.category, 'system'  );
+      test.hasProperty(   err, 'message' );
+      test.equal(         err.message, 'Card has no token'  );
+      test.hasNoProperty( transaction, 'receipt' );
+      test.done();
+    }
+
+    transaction = new samurai.Transaction({
+      type: 'purchase',
+      data: {
+        amount: getRandomAmount(),
+        currency: 'USD'
+      }
+    });
+
+    var card = new samurai.Card(sandboxValidCard);
     transaction.process(card, callback);
-  });
-};
-
-tests.executeTransactionWithBadCard = function(test) {
-  var transaction;
-
-  function callback(err) {
-    should.not.exist(err); // Failed transaction is not an error
-    transaction.should.have.property('receipt');
-    transaction.receipt.should.have.property('success');
-    transaction.receipt.success.should.equal(false);
-    transaction.should.have.property('messages');
-    transaction.messages.should.have.property('errors');
-    transaction.messages.errors.should.have.property('transaction');
-    transaction.messages.errors.transaction.should.contain('Declined');
-    test.done();
   }
 
-  transaction = new samurai.Transaction({
-    type: 'purchase',
-    data: {
-      billingReference: '123',
-      customerReference: '123',
-      amount: 10  // Declined amount code
-    }
-  });
-  
-  var card = new samurai.Card(sandboxDeclinedCard);
-
-  card.create(function(err) {
-    // We have the token now.
-    card.should.have.property('token');
-    transaction.process(card, callback);
-  });
-};
-
-tests.usingTransactionsWithWrongCurrency = function(test) {
-  var transaction;
-
-  function callback(err) {
-    should.exist(err);
-    err.should.have.property('category');
-    err.category.should.equal('system');
-    err.should.have.property('message');
-    err.message.should.equal('Currency not allowed');
-    err.should.have.property('details');
-    err.details.should.equal('GBP');
-    transaction.should.not.have.property('receipt');
-    test.done();
-  }
-
-  transaction = new samurai.Transaction({
-    type: 'purchase',
-    data: {
-      amount: 10,
-      currency: 'GBP'
-    }
-  });
-
-  // First we need a card
-  var card = new samurai.Card(sandboxValidCard);
-
-  card.create(function(err) {
-    // We have the token now.
-    card.should.have.property('token');
-    transaction.process(card, callback);
-  });
-};
-
-tests.cardWithNoTokenCannotBeUsedForTransaction = function(test) {
-  var transaction;
-
-  function callback(err) {
-    should.exist(err);
-    err.should.have.property('category');
-    err.category.should.equal('system');
-    err.should.have.property('message');
-    err.message.should.equal('Card has no token');
-    transaction.should.not.have.property('receipt');
-    test.done();
-  }
-
-  transaction = new samurai.Transaction({
-    type: 'purchase',
-    data: {
-      amount: 10,
-      currency: 'USD'
-    }
-  });
-
-  var card = new samurai.Card(sandboxValidCard);
-  transaction.process(card, callback);
-};
-
-exports.samurai = tests;
+});
