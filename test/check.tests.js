@@ -10,10 +10,10 @@
  * purchases. They are only useful for testing.
  */
 
-var assert = require('assert');
-var should = require('should');
 var check = require('../lib/check');
-var test = exports;
+var assert = require('assert');
+var helpers = require('./helpers');
+var testCase = require('nodeunit').testCase;
 
 var validCardNos = {
   '378282246310005': 'American Express',
@@ -33,38 +33,50 @@ var validCardNos = {
   '4222222222222': 'Visa'
 };
 
-test['Issuer check'] = function(exit) {
-  Object.keys(validCardNos).forEach(function(card) {
-    check.getIssuer(card).should.equal(validCardNos[card]);
-  });
-};
+exports.check = testCase({
 
-test['Issuer check with full details'] = function(exit) {
-  Object.keys(validCardNos).forEach(function(card) {
-    var issuerDetails = check.getIssuer(card, true);
-    issuerDetails[0] = validCardNos[card];
-    issuerDetails[1].should.be.instanceof(RegExp);
-    issuerDetails[2].should.be.instanceof(RegExp);
-  });
-};
+  issuerCheck: function(test) {
+    test.expect(15);
+    Object.keys(validCardNos).forEach(function(card) {
+      test.equal(check.getIssuer(card), validCardNos[card]);
+    });
+    test.done();
+  },
 
-test['Mod-10 test'] = function(exit) {
-  // All test cards should pass (they are all valid numbers)
-  Object.keys(validCardNos).forEach(function(card) {
-    check.mod10check(card).should.equal(card);
-  });
-};
+  issuerCheckWithFullDetails: function(test) {
+    test.expect(30);
+    Object.keys(validCardNos).forEach(function(card) {
+      var issuerDetails = check.getIssuer(card, true);
+      issuerDetails[0] = validCardNos[card];
+      test.isInstanceOf(issuerDetails[1], RegExp);
+      test.isInstanceOf(issuerDetails[2], RegExp);
+    });
+    test.done();
+  },
 
-test['CSC check using Amex and non-Amex card'] = function(exit) {
-  // MasterCard
-  check.cscCheck('5555555555554444', '111').should.be.ok;
-  check.cscCheck('5555555555554444', '11').should.not.be.ok;
-  check.cscCheck('5555555555554444', '1111').should.not.be.ok;
-  check.cscCheck('5555555555554444', 'foo').should.not.be.ok;
-  
-  // Amex
-  check.cscCheck('378282246310005', '111').should.not.be.ok;
-  check.cscCheck('378282246310005', '1111').should.be.ok;
-  check.cscCheck('378282246310005', '11111').should.not.be.ok;
-  check.cscCheck('378282246310005', 'foo').should.not.be.ok;
-};
+  mod10test: function(test) {
+    test.expect(15);
+    // All test cards should pass (they are all valid numbers)
+    Object.keys(validCardNos).forEach(function(card) {
+      test.equal(check.mod10check(card), card);
+    });
+    test.done();
+  },
+
+  cscCheckUsingAmexAndNonAmexCard: function(test) {
+    // MasterCard
+    test.ok(check.cscCheck('5555555555554444', '111'));
+    test.notOk(check.cscCheck('5555555555554444', '11'));
+    test.notOk(check.cscCheck('5555555555554444', '1111'));
+    test.notOk(check.cscCheck('5555555555554444', 'foo'));
+
+    // Amex
+    test.notOk(check.cscCheck('378282246310005', '111'));
+    test.ok(check.cscCheck('378282246310005', '1111'));
+    test.notOk(check.cscCheck('378282246310005', '11111'));
+    test.notOk(check.cscCheck('378282246310005', 'foo'));
+
+    test.done();
+  }
+
+});

@@ -1,8 +1,8 @@
 test:
-	node_modules/.bin/expresso -t 4000 -s test/*.tests.js
+	node_modules/.bin/nodeunit test/*.tests.js
 
 test_ci:
-	rm -rf results && mkdir results && node_modules/.bin/expresso -t 4000 -s -x results test/*.tests.js
+	rm -rf results && mkdir results && node_modules/.bin/nodeunit --reporter junit --output results test/*.tests.js
 
 checkamd:
 	cat lib/check.js | sed 's/var check = exports;/define(function() {\nvar check = {};/' > check-`cat VERSION`.js && echo -e "\n\nreturn check;\n\n});" >> check-`cat VERSION`.js

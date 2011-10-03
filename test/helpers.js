@@ -62,3 +62,99 @@ helpers.getAdjustedDateparts = function(months) {
   var newDate = helpers.getAdjustedDate(months);
   return [newDate.getFullYear(), newDate.getMonth() + 1];
 };
+
+
+/**
+ * Get a random transaction amount that does not have error-code significance
+ *
+ * @returns {Number} random transaction amount
+ */
+helpers.getRandomAmount = function() {
+  return Math.floor(Math.random()*1000)/100 + 11; // Random decimal + 11 (10 is "declined" error code)
+};
+
+
+
+/**
+ * Assertion helpers
+ */
+var assert = require('nodeunit').assert;
+
+assert.notOk = function(value, message) {
+  if (!!value) assert.fail(value, true, message, "!=", assert.notOk);
+};
+
+assert.isDefined = function(object, message) {
+  if (object == undefined) assert.fail(object, undefined, message, "should not be", assert.isDefined);
+};
+assert.isUndefined = function(object, message) {
+  if (object != undefined) assert.fail(object, undefined, message, "should be", assert.isDefined);
+};
+
+assert.hasProperty = function(object, property, message) {
+  if (undefined === object[property]) {
+    assert.fail(object[property], 'defined', message, "should be", assert.hasProperty);
+  }
+};
+assert.hasNoProperty = function(object, property, message) {
+  if (undefined !== object[property]) {
+    assert.fail(object[property], undefined, message, "should be", assert.hasProperty);
+  }
+};
+
+assert.contains = function(array, object, message) {
+  assert.isDefined(array);
+  if (array.indexOf(object) == -1) {
+    assert.fail(array, object, message, "should contain", assert.contains);
+  }
+};
+assert.notContain = function(array, object, message) {
+  assert.isDefined(array);
+  if (array.indexOf(object) >= 0) {
+    assert.fail(array, object, message, "should not contain", assert.notContain);
+  }
+};
+
+assert.hasKeys = function(array, keys, message) {
+  assert.isDefined(array);
+  var actual = Object.keys(array);
+  var ok = keys.every(function(key){
+    return ~actual.indexOf(key);
+  });
+  if (!ok) {
+    assert.fail(array, keys, message, "should contain keys", assert.hasKeys);
+  }
+};
+
+assert.isInstanceOf = function(object, type, message) {
+  if (!(object instanceof type)) {
+    assert.fail(object, type, message, "should be an instance of", assert.isInstanceOf);
+  }
+};
+
+assert.isEmpty = function(array, message) {
+  assert.isDefined(array);
+  if (array.length > 0) {
+    assert.fail(array, 'empty array', message, "should be", assert.isEmpty);
+  }
+};
+
+assert.isNotEmpty = function(array, message) {
+  assert.isDefined(array);
+  if (array.length == 0) {
+    assert.fail(array, 'empty array', message, "should not be", assert.isNotEmpty);
+  }
+};
+
+
+
+/**
+ * Config debug helpers
+ */
+//var config = require('config');
+//
+//config.debug = function(message) {
+//  if (settings.debug) {
+//    util.debug(message);
+//  }
+//};
