@@ -14,7 +14,7 @@
         "type" : "git",
         "url" : "https://github.com/FeeFighters/samurai-client-nodejs.git"
     },
-    "main" : "./lib/samurai",
+    "main" : "./index.js",
     "licenses" : [
         {
             "type": "MIT",
